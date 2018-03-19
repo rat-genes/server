@@ -12,7 +12,7 @@ client.query(`
     );
 `)
     .then(
-        () => console.log('db table creation successful'),
+        () => console.log('db table seeded successfully'),
         err => console.error(err)
     )
     .then(() => client.end());
