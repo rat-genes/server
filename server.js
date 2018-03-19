@@ -21,13 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
-
-app.get('/hello', (request, response) => {
-    response.send('Hello World!');
-});
-
 // Calling for park data from API
-app.get('/api/v1/parks', (request, response) => {
+app.get('/api/v1/parks', (request, response, next) => {
 
     sa.get(NPS_API_URL)
         .query({
@@ -49,12 +44,18 @@ app.get('/api/v1/parks', (request, response) => {
             };
             response.send(formatted);
         })
-        .catch(err => {
-            console.error(err);
-            // response.send(status);
-        });
+        .catch(next);
 });
 
+app.use((err, request, response, next) => { 
+    console.log(err);
+    if(err.status) {
+        response.status(err.status).send({ error: err.message });
+    }
+    else {
+        response.sendStatus(500);
+    }
+});
 
 app.listen(PORT, () => {
     console.log('Server listening for PORT ', PORT);
