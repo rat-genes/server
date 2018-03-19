@@ -21,24 +21,29 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
+
+app.get('/hello', (request, response) => {
+    response.send('Hello World!');
+});
+
 // Calling for park data from API
-app.get('/api/v1/parks', (request, response, next) => {
+app.get('/api/v1/parks', (request, response) => {
 
     sa.get(NPS_API_URL)
         .query({
             parkCode: 'olym,crla,mora,noca',
             fields: 'images',
-            key: NPS_API_KEY
+            api_key: NPS_API_KEY
         })
         .then(res => {
             const body = res.body;
             const formatted = {
                 parks: body.data.map(park => {
                     return {
-                        name: park.data.fullName,
-                        description: park.data.description,
-                        image_url: park.data.images[0].url,
-                        park_code: park.data.parkCode
+                        name: park.fullName,
+                        description: park.description,
+                        image_url: park.images[0].url,
+                        park_code: park.parkCode
                     };
                 })
             };
@@ -46,7 +51,7 @@ app.get('/api/v1/parks', (request, response, next) => {
         })
         .catch(err => {
             console.error(err);
-            response.send(status);
+            // response.send(status);
         });
 });
 
