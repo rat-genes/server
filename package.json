@@ -1,0 +1,30 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rat-genes/server.git"
+  },
+  "author": "Victor Bofill",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rat-genes/server/issues"
+  },
+  "homepage": "https://github.com/rat-genes/server#readme",
+  "devDependencies": {
+    "eslint": "^4.19.0",
+    "nodemon": "^1.17.2"
+  },
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "pg": "^7.4.1",
+    "superagent": "^3.8.2"
+  }
+}
