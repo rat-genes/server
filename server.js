@@ -71,6 +71,28 @@ app.post('/api/v1/auth/signup', (request, response, next) => {
         .catch(next);
 });
 
+app.post('/api/v1/login', (request, response, next) => {
+    const credentials = request.body;
+    if(!credentials.name || !credentials.password) {
+        return next({ status: 400, message: 'name and password must be provided' });
+    }
+
+    client.query(`
+    SELECT id, password
+    FROM users
+    WHERE name=$1
+`,
+    [credentials.name])
+        .then(result => {
+            if(result.rows.length === 0 || result.rows[0].password !== credentials.password) {
+                return next({ status: 400, message: 'invalid email or password' });
+            }
+            const token = makeToken(result.rows[0].id);
+            response.send(token);
+        });
+
+});
+
 app.get('api/v1/users', (request, response, next) => {
     client.query(`SELECT * FROM users;`
     )
