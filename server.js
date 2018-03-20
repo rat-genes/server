@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
-function  ensureAdmin (request, response, next) {
+function ensureAdmin (request, response, next) {
     const token = request.get('token') || request.query.token;
     if(!token) next({ status: 401, message: 'No token found'});
 
@@ -104,7 +104,7 @@ app.get('/api/v1/parks', (request, response, next) => {
         .catch(next);
 });
 
-app.use((err, request, response, next) => { 
+app.use((err, request, response, next) => {
     console.log(err);
     if(err.status) {
         response.status(err.status).send({ error: err.message });
