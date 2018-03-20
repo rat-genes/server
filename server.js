@@ -44,7 +44,7 @@ function makeToken(id) {
 app.post('/api/auth/signup', (request, response,next) => {
     const credentials = request.body;
     if(!credentials.name || !credentials.password) {
-        return next({ status 400, message: 'name and password must be provided' });
+        return next({ status: 400, message: 'name and password must be provided' });
     }
 
     client.query(`
@@ -55,7 +55,7 @@ app.post('/api/auth/signup', (request, response,next) => {
     [credentials.name])
         .then(result => {
             if(result.rows.length !== 0) {
-                return next({ status 400, message: 'name already exists' });
+                return next({ status: 400, message: 'name already exists' });
             }
             return client.query(`
                 INSERT INTO users (name, password)
