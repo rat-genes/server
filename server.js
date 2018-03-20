@@ -21,6 +21,13 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
+app.get('api/v1/users', (request, response, next) => {
+    client.query(`SELECT * FROM users;`
+    )
+        .then((results) => response.send(results.rows))
+        .catch(next);
+});
+
 // Calling for park data from API
 app.get('/api/v1/parks', (request, response, next) => {
 
