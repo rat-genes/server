@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
-function  ensureAdmin (request, response, next) {
+function ensureAdmin (request, response, next) {
     const token = request.get('token') || request.query.token;
     if(!token) next({ status: 401, message: 'No token found'});
 
@@ -41,7 +41,7 @@ function makeToken(id) {
     return { token: jwt.sign({ id: id}, TOKEN_KEY)};
 }
 
-app.post('/api/auth/signup', (request, response,next) => {
+app.post('/api/v1/auth/signup', (request, response, next) => {
     const credentials = request.body;
     if(!credentials.name || !credentials.password) {
         return next({ status: 400, message: 'name and password must be provided' });
@@ -69,7 +69,7 @@ app.post('/api/auth/signup', (request, response,next) => {
             response.send(token);
         })
         .catch(next);
-})
+});
 
 app.get('api/v1/users', (request, response, next) => {
     client.query(`SELECT * FROM users;`
