@@ -11,6 +11,7 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const sa = require('superagent');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -20,6 +21,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
+
+function  ensureAdmin (request, response, next) {
+    const token = request.get('token') || request.query.token;
+    if(!token) next({ status: 401, message: 'No token found'});
+
+    let payload;
+    try {
+        payload = jwt.verify(token, TOKEN_KEY);
+    } catch(err) {
+        return next({ status: 403, message: 'Unauthorized' });
+    }
+    request.user = payload;
+    next();
+}
 
 app.get('api/v1/users', (request, response, next) => {
     client.query(`SELECT * FROM users;`
