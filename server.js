@@ -69,7 +69,7 @@ app.post('/api/auth/signup', (request, response,next) => {
             response.send(token);
         })
         .catch(next);
-})
+});
 
 app.get('api/v1/users', (request, response, next) => {
     client.query(`SELECT * FROM users;`
