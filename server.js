@@ -71,7 +71,7 @@ app.post('/api/v1/auth/signup', (request, response, next) => {
         .catch(next);
 });
 
-app.post('/api/v1/login', (request, response, next) => {
+app.post('/api/v1/auth/login', (request, response, next) => {
     const credentials = request.body;
     if(!credentials.name || !credentials.password) {
         return next({ status: 400, message: 'name and password must be provided' });
