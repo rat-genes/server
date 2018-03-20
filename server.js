@@ -22,14 +22,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
+let userToken = null;
 
 function ensureAdmin (request, response, next) {
     const token = request.get('token') || request.query.token;
     if(!token) next({ status: 401, message: 'No token found'});
-
+    console.log('TOKEN', token);
     let payload;
     try {
-        payload = jwt.verify(token, TOKEN_KEY);
+        // payload = jwt.verify(token, TOKEN_KEY);
+        payload = jwt.verify(token, userToken);
     } catch(err) {
         return next({ status: 403, message: 'Unauthorized' });
     }
@@ -38,7 +40,7 @@ function ensureAdmin (request, response, next) {
 }
 
 function makeToken(id) {
-    return { token: jwt.sign({ id: id}, TOKEN_KEY)};
+    return { token: jwt.sign({ id: id }, TOKEN_KEY)};
 }
 
 app.post('/api/v1/auth/signup', (request, response, next) => {
@@ -65,8 +67,8 @@ app.post('/api/v1/auth/signup', (request, response, next) => {
             [credentials.name, credentials.password]);
         })
         .then(result => {
-            const token = makeToken(result.rows[0].id);
-            response.send(token);
+            userToken = makeToken(result.rows[0].id);
+            response.send(userToken);
         })
         .catch(next);
 });
@@ -87,8 +89,9 @@ app.post('/api/v1/auth/login', (request, response, next) => {
             if(result.rows.length === 0 || result.rows[0].password !== credentials.password) {
                 return next({ status: 400, message: 'invalid email or password' });
             }
-            const token = makeToken(result.rows[0].id);
-            response.send(token);
+            userToken = makeToken(result.rows[0].id);
+            console.log('userToken ', userToken);
+            response.send(userToken);
         });
 
 });
@@ -101,7 +104,7 @@ app.get('api/v1/users', (request, response, next) => {
 });
 
 // Calling for park data from API
-app.get('/api/v1/parks', (request, response, next) => {
+app.get('/api/v1/parks', ensureAdmin, (request, response, next) => {
 
     sa.get(NPS_API_URL)
         .query({
