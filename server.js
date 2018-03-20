@@ -116,7 +116,7 @@ app.use((err, request, response, next) => {
 });
 
 //Calling for camp data from api
-app.get('/api/v1/parks/detail', (request, response, next) => {
+app.get('/api/v1/campgrounds', (request, response, next) => {
 
     sa.get(NPSCG_API_URL)
         .query({
