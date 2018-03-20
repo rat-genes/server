@@ -41,6 +41,36 @@ function makeToken(id) {
     return { token: jwt.sign({ id: id}, TOKEN_KEY)};
 }
 
+app.post('/api/auth/signup', (request, response,next) => {
+    const credentials = request.body;
+    if(!credentials.name || !credentials.password) {
+        return next({ status 400, message: 'name and password must be provided' });
+    }
+
+    client.query(`
+        SELECT id
+        FROM users
+        WHERE name=$1
+    `,
+    [credentials.name])
+        .then(result => {
+            if(result.rows.length !== 0) {
+                return next({ status 400, message: 'name already exists' });
+            }
+            return client.query(`
+                INSERT INTO users (name, password)
+                VALUES ($1, $2)
+                RETURNING id, name;
+            `,
+            [credentials.name, credentials.password]);
+        })
+        .then(result => {
+            const token = makeToken(result.rows[0].id);
+            response.send(token);
+        })
+        .catch(next);
+})
+
 app.get('api/v1/users', (request, response, next) => {
     client.query(`SELECT * FROM users;`
     )
