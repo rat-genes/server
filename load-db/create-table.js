@@ -3,12 +3,10 @@
 const client = require('../db-client');
 
 client.query(`
-    CREATE TABLE IF NOT EXISTS parks (
+    CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    image_url VARCHAR(255),
-    park_code VARCHAR(10)
+    password TEXT NOT NULL
     );
 `)
     .then(
