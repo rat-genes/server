@@ -6,6 +6,7 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 const NPS_API_URL = process.env.NPS_API_URL;
 const NPS_API_KEY = process.env.NPS_API_KEY;
+const TOKEN_KEY = process.env.TOKEN_KEY;
 
 const express = require('express');
 const morgan = require('morgan');
@@ -34,6 +35,10 @@ function  ensureAdmin (request, response, next) {
     }
     request.user = payload;
     next();
+}
+
+function makeToken(id) {
+    return { token: jwt.sign({ id: id}, TOKEN_KEY)};
 }
 
 app.get('api/v1/users', (request, response, next) => {
