@@ -116,11 +116,11 @@ app.use((err, request, response, next) => {
 });
 
 //Calling for camp data from api
-app.get('/api/v1/campgrounds', (request, response, next) => {
-
+app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
+    const parkCode = request.params.parkCode;
     sa.get(NPSCG_API_URL)
         .query({
-            parkCode: 'olym,crla,mora,noca',
+            parkCode: parkCode,
             api_key: NPS_API_KEY
         })
         .then(res => {
