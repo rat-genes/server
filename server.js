@@ -110,17 +110,30 @@ app.get('/api/v1/parks', (request, response, next) => {
         .catch(next);
 });
 
-app.use((err, request, response, next) => {
-    console.log(err);
-    if(err.status) {
-        response.status(err.status).send({ error: err.message });
-    }
-    else {
-        response.sendStatus(500);
-    }
-});
-
 //Calling for camp data from api
+// app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
+//     const parkCode = request.params.parkCode;
+//     sa.get(NPSCG_API_URL)
+//         .query({
+//             parkCode: parkCode,
+//             api_key: NPS_API_KEY
+//         })
+//         .then(res => {
+//             const body = res.body;
+//             const formatted = {
+//                 campgrounds: body.data.map(camp => {
+//                     return {
+//                         name: camp.name,
+//                         parkCode: parkCode,
+//                         id: camp.id
+//                     };
+//                 })
+//             };
+//             response.send(formatted);
+//         })
+//         .catch(next);
+// });
+
 app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
     const parkCode = request.params.parkCode;
     sa.get(NPSCG_API_URL)
@@ -135,10 +148,12 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
                     return {
                         name: camp.name,
                         description: camp.description,
-
+                        parkCode: parkCode,
+                        id: camp.id,
+                        
                         directions: camp.directionsUrl,
                         regulations: camp.regulationsUrl,
-
+                        
                         campsites: {
                             total_sites: camp.campsites.totalSites,
                             other_sites: camp.campsites.other,
@@ -163,6 +178,16 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
             response.send(formatted);
         })
         .catch(next);
+});
+                                    
+app.use((err, request, response, next) => {
+    console.log(err);
+    if(err.status) {
+        response.status(err.status).send({ error: err.message });
+    }
+    else {
+        response.sendStatus(500);
+    }
 });
 
 app.listen(PORT, () => {
