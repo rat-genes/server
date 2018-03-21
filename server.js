@@ -5,12 +5,15 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const NPS_API_URL = process.env.NPS_API_URL;
+const NPSCG_API_URL = process.env.NPSCG_API_URL;
 const NPS_API_KEY = process.env.NPS_API_KEY;
+//const TOKEN_KEY = process.env.TOKEN_KEY;
 
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const sa = require('superagent');
+//const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -20,6 +23,54 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
+
+function ensureAdmin (request, response, next) {
+    const token = request.get('token') || request.query.token;
+    if(!token) next({ status: 401, message: 'No token found'});
+
+    let payload;
+    try {
+        payload = jwt.verify(token, TOKEN_KEY);
+    } catch(err) {
+        return next({ status: 403, message: 'Unauthorized' });
+    }
+    request.user = payload;
+    next();
+}
+
+function makeToken(id) {
+    return { token: jwt.sign({ id: id}, TOKEN_KEY)};
+}
+
+app.post('/api/auth/signup', (request, response,next) => {
+    const credentials = request.body;
+    if(!credentials.name || !credentials.password) {
+        return next({ status: 400, message: 'name and password must be provided' });
+    }
+
+    client.query(`
+        SELECT id
+        FROM users
+        WHERE name=$1
+    `,
+    [credentials.name])
+        .then(result => {
+            if(result.rows.length !== 0) {
+                return next({ status: 400, message: 'name already exists' });
+            }
+            return client.query(`
+                INSERT INTO users (name, password)
+                VALUES ($1, $2)
+                RETURNING id, name;
+            `,
+            [credentials.name, credentials.password]);
+        })
+        .then(result => {
+            const token = makeToken(result.rows[0].id);
+            response.send(token);
+        })
+        .catch(next);
+});
 
 app.get('api/v1/users', (request, response, next) => {
     client.query(`SELECT * FROM users;`
@@ -54,7 +105,7 @@ app.get('/api/v1/parks', (request, response, next) => {
         .catch(next);
 });
 
-app.use((err, request, response, next) => { 
+app.use((err, request, response, next) => {
     console.log(err);
     if(err.status) {
         response.status(err.status).send({ error: err.message });
@@ -62,6 +113,51 @@ app.use((err, request, response, next) => {
     else {
         response.sendStatus(500);
     }
+});
+
+//Calling for camp data from api
+app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
+    const parkCode = request.params.parkCode;
+    sa.get(NPSCG_API_URL)
+        .query({
+            parkCode: parkCode,
+            api_key: NPS_API_KEY
+        })
+        .then(res => {
+            const body = res.body;
+            const formatted = {
+                campgrounds: body.data.map(camp => {
+                    return {
+                        name: camp.name,
+                        description: camp.description,
+
+                        directions: camp.directionsUrl,
+                        regulations: camp.regulationsUrl,
+
+                        campsites: {
+                            total_sites: camp.campsites.totalSites,
+                            other_sites: camp.campsites.other,
+                            groups_sites: camp.campsites.group,
+                            tent_only: camp.campsites.tentOnly,
+                            electricity: camp.campsites.electricalHookups,
+                            rv: camp.campsites.rvOnly,
+                            boat_launch: camp.campsites.walkBoatTo
+                        },
+                        accessibility: {
+                            wheelchair_access: camp.accessibility.wheelchairAccess,
+                            fire_policy: camp.accessibility.fireStovePolicy,
+                            ada_bathrooms: camp.accessibility.adaInfo
+                        },
+                        amenities: {
+                            toilets: camp.amenities.toilets,
+                            showers: camp.amenities.showers
+                        }
+                    };
+                })
+            };
+            response.send(formatted);
+        })
+        .catch(next);
 });
 
 app.listen(PORT, () => {
