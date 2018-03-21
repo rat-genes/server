@@ -159,16 +159,16 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
 // Post Trip info to local database
 app.post('/api/v1/trip/save', (request, response, next) => {
     const body = request.body;
-    // const parkCode = request.params.parkCode;
     console.log(body);
     return client.query(`
-        INSERT INTO trips (park_code, campground_id)
-        VALUES ($1, $2)
+        INSERT INTO trips (park_code, campground_id, user_id)
+        VALUES ($1, $2, $3)
         RETURNING id, park_code, campground_id;
         `,
     [
         body.park_code,
-        body.campground_id
+        body.campground_id,
+        body.user_id
     ])
         .then(result => response.send(result.rows[0]))
         .catch(next);
