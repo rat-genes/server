@@ -106,7 +106,30 @@ app.get('/api/v1/parks', (request, response, next) => {
 });
 
 //Calling for camp data from api
-app.get('/api/v1/campgrounds/filters/:parkCode', (request, response, next) => {
+// app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
+//     const parkCode = request.params.parkCode;
+//     sa.get(NPSCG_API_URL)
+//         .query({
+//             parkCode: parkCode,
+//             api_key: NPS_API_KEY
+//         })
+//         .then(res => {
+//             const body = res.body;
+//             const formatted = {
+//                 campgrounds: body.data.map(camp => {
+//                     return {
+//                         name: camp.name,
+//                         parkCode: parkCode,
+//                         id: camp.id
+//                     };
+//                 })
+//             };
+//             response.send(formatted);
+//         })
+//         .catch(next);
+// });
+
+app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
     const parkCode = request.params.parkCode;
     sa.get(NPSCG_API_URL)
         .query({
@@ -119,29 +142,8 @@ app.get('/api/v1/campgrounds/filters/:parkCode', (request, response, next) => {
                 campgrounds: body.data.map(camp => {
                     return {
                         name: camp.name,
-                        id: camp.id
-                    };
-                })
-            };
-            response.send(formatted);
-        })
-        .catch(next);
-});
-
-app.get('/api/v1/campgrounds/:id', (request, response, next) => {
-    const id = request.params.id;
-    sa.get(NPSCG_API_URL)
-        .query({
-            id: id,
-            api_key: NPS_API_KEY
-        })
-        .then(res => {
-            const body = res.body;
-            const formatted = {
-                campgrounds: body.data.map(camp => {
-                    return {
-                        name: camp.name,
                         description: camp.description,
+                        parkCode: parkCode,
                         id: camp.id,
                         
                         directions: camp.directionsUrl,
