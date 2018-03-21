@@ -6,13 +6,11 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 const NPS_API_URL = process.env.NPS_API_URL;
 const NPS_API_KEY = process.env.NPS_API_KEY;
-const TOKEN_KEY = process.env.TOKEN_KEY;
 
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const sa = require('superagent');
-const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -23,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
-let userID = [];
+const userID = [];
 
 app.post('/api/v1/auth/signup', (request, response, next) => {
     const credentials = request.body;
