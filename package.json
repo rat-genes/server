@@ -7,9 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "watch": "nodemon server.js",
-    "db-table-create": "node load-db/create-table.js",
-    "db-seed": "node load-db/seed-table.js",
-    "db-create": "npm run db-table-create && npm run db-seed"
+    "db-create-tables": "node load-db/create-table.js",
+    "db-seed-table": "node load-db/seed-table.js",
+    "db-delete-tables": "node load-db/drop-table.js",
+    "db-create": "npm run db-create-tables && npm run db-seed-table"
   },
   "repository": {
     "type": "git",

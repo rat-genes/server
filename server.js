@@ -7,13 +7,11 @@ const PORT = process.env.PORT || 3000;
 const NPS_API_URL = process.env.NPS_API_URL;
 const NPSCG_API_URL = process.env.NPSCG_API_URL;
 const NPS_API_KEY = process.env.NPS_API_KEY;
-const TOKEN_KEY = process.env.TOKEN_KEY;
 
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const sa = require('superagent');
-const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -24,25 +22,9 @@ app.use(express.urlencoded({ extended: true }));
 
 const client = require('./db-client');
 
-function ensureAdmin (request, response, next) {
-    const token = request.get('token') || request.query.token;
-    if(!token) next({ status: 401, message: 'No token found'});
+const userID = [];
 
-    let payload;
-    try {
-        payload = jwt.verify(token, TOKEN_KEY);
-    } catch(err) {
-        return next({ status: 403, message: 'Unauthorized' });
-    }
-    request.user = payload;
-    next();
-}
-
-function makeToken(id) {
-    return { token: jwt.sign({ id: id}, TOKEN_KEY)};
-}
-
-app.post('/api/auth/signup', (request, response,next) => {
+app.post('/api/v1/auth/signup', (request, response, next) => {
     const credentials = request.body;
     if(!credentials.name || !credentials.password) {
         return next({ status: 400, message: 'name and password must be provided' });
@@ -66,8 +48,31 @@ app.post('/api/auth/signup', (request, response,next) => {
             [credentials.name, credentials.password]);
         })
         .then(result => {
-            const token = makeToken(result.rows[0].id);
-            response.send(token);
+            userID[0] = result.rows[0].id;
+            response.send(userID);
+        })
+        .catch(next);
+});
+
+app.post('/api/v1/auth/login', (request, response, next) => {
+    const credentials = request.body;
+    if(!credentials.name || !credentials.password) {
+        return next({ status: 400, message: 'name and password must be provided' });
+    }
+
+    client.query(`
+    SELECT id, password
+    FROM users
+    WHERE name=$1
+`,
+    [credentials.name])
+        .then(result => {
+            if(result.rows.length === 0 || result.rows[0].password !== credentials.password) {
+                return next({ status: 400, message: 'invalid email or password' });
+            }
+            userID[0] = result.rows[0].id;
+            console.log('GOT HERE', userID[0]);
+            response.send(userID);
         })
         .catch(next);
 });
