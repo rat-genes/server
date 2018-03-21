@@ -105,9 +105,52 @@ app.get('/api/v1/parks', (request, response, next) => {
         .catch(next);
 });
 
+app.get('/api/v1/campgrounds/:id', (request, response, next) => {
+    const id = request.params.id;
+    sa.get(NPSCG_API_URL)
+        .query({
+            id: id,
+            api_key: NPS_API_KEY
+        })
+        .then(res => {
+            const body = res.body;
+            const formatted = {
+                campgrounds: body.data.map(camp => {
+                    return {
+                        name: camp.name,
+                        description: camp.description,
+                        
+                        directions: camp.directionsUrl,
+                        regulations: camp.regulationsUrl,
+                        
+                        campsites: {
+                            total_sites: camp.campsites.totalSites,
+                            other_sites: camp.campsites.other,
+                            groups_sites: camp.campsites.group,
+                            tent_only: camp.campsites.tentOnly,
+                            electricity: camp.campsites.electricalHookups,
+                            rv: camp.campsites.rvOnly,
+                            boat_launch: camp.campsites.walkBoatTo
+                        },
+                        accessibility: {
+                            wheelchair_access: camp.accessibility.wheelchairAccess,
+                            fire_policy: camp.accessibility.fireStovePolicy,
+                            ada_bathrooms: camp.accessibility.adaInfo
+                        },
+                        amenities: {
+                            toilets: camp.amenities.toilets,
+                            showers: camp.amenities.showers
+                        }
+                    };
+                })
+            };
+            response.send(formatted);
+        })
+        .catch(next);
+});
 
 //Calling for camp data from api
-app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
+app.get('/api/v1/campgrounds/filters/:parkCode', (request, response, next) => {
     const parkCode = request.params.parkCode;
     sa.get(NPSCG_API_URL)
         .query({
@@ -120,6 +163,7 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
                 campgrounds: body.data.map(camp => {
                     return {
                         name: camp.name,
+                        id: camp.id
                     };
                 })
             };
@@ -127,50 +171,6 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
         })
         .catch(next);
 });
-
-// app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
-//     const parkCode = request.params.parkCode;
-//     sa.get(NPSCG_API_URL)
-//         .query({
-//             parkCode: parkCode,
-//             api_key: NPS_API_KEY
-//         })
-//         .then(res => {
-//             const body = res.body;
-//             const formatted = {
-//                 campgrounds: body.data.map(camp => {
-//                     return {
-//                         name: camp.name,
-//                         description: camp.description,
-                        
-//                         directions: camp.directionsUrl,
-//                         regulations: camp.regulationsUrl,
-                        
-//                         campsites: {
-//                             total_sites: camp.campsites.totalSites,
-//                             other_sites: camp.campsites.other,
-//                             groups_sites: camp.campsites.group,
-//                             tent_only: camp.campsites.tentOnly,
-//                             electricity: camp.campsites.electricalHookups,
-//                             rv: camp.campsites.rvOnly,
-//                             boat_launch: camp.campsites.walkBoatTo
-//                         },
-//                         accessibility: {
-//                             wheelchair_access: camp.accessibility.wheelchairAccess,
-//                             fire_policy: camp.accessibility.fireStovePolicy,
-//                             ada_bathrooms: camp.accessibility.adaInfo
-//                         },
-//                         amenities: {
-//                             toilets: camp.amenities.toilets,
-//                             showers: camp.amenities.showers
-//                         }
-//                     };
-//                 })
-//             };
-//             response.send(formatted);
-//         })
-//         .catch(next);
-// });
                                     
 app.use((err, request, response, next) => {
     console.log(err);
