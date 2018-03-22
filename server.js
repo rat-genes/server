@@ -220,13 +220,21 @@ app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
     const id = request.params.id;
 
     client.query(`
-        DELETE FROM trips
-        WHERE id=$1;
+            DELETE FROM todos
+            WHERE trip_id=$1;    
     `,
     [id]
     )
-        .then(result => response.send({ removed: result.rowCount !== 0 }))
-        .catch(next);
+        .then(
+            client.query(`
+            DELETE FROM trips
+            WHERE id=$1;
+        `,
+            [id]
+            )
+                .then(result => response.send(result.rows[0]))
+                .catch(next)
+        );
 });
 
 app.listen(PORT, () => {
