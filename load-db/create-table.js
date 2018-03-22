@@ -16,8 +16,9 @@ client.query(`
     CREATE TABLE IF NOT EXISTS todos (
         id SERIAL PRIMARY KEY,
         trip_id int,
-        text TEXT NOT NULL,
-        complete VARCHAR(1),
+        checklist TEXT NOT NULL,
+        todos TEXT NOT NULL,
+        campground VARCHAR(256),
         FOREIGN KEY (trip_id) REFERENCES trips (id)
     );
     `)
