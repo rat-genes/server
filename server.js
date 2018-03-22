@@ -112,18 +112,16 @@ app.get('/api/v1/parks', (request, response, next) => {
 
 app.post('/api/v1/todos/save', (request, response, next) => {
     const body = request.body;
-    console.log('body.checklistHtml: ', body.checklistHtml);
-    console.log('body.todoHtml: ', body.todoHtml);
-    console.log('body.campground: ', body.campground);
     return client.query(`
-        INSERT INTO todos (checklist, todos, campground)
-        VALUES ($1, $2, $3)
-        RETURNING checklist, todos, campground;
+        INSERT INTO todos (checklist, todos, campground, trip_id)
+        VALUES ($1, $2, $3, $4)
+        RETURNING checklist, todos, campground, trip_id;
         `,
     [
         body.checklistHtml,
         body.todoHtml,
-        body.campground
+        body.campground,
+        body.trip_id
     ])
         .then(result => response.send(result.rows[0]))
         .catch(next);
@@ -221,7 +219,7 @@ app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
 
     client.query(`
             DELETE FROM todos
-            WHERE trip_id=$1;    
+            WHERE trip_id=$1;
     `,
     [id]
     )
@@ -235,6 +233,23 @@ app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
                 .then(result => response.send(result.rows[0]))
                 .catch(next)
         );
+});
+
+app.get('/api/v1/profile/loadplan/:id', (request, response, next) => {
+    const id = request.params.id;
+
+    client.query(`
+            SELECT * FROM todos
+            WHERE trip_id=$1;    
+    `,
+    [id]
+    )
+
+        .then(
+            result => response.send(result.rows)
+        )
+
+        .catch(next);
 });
 
 app.listen(PORT, () => {
