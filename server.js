@@ -129,30 +129,6 @@ app.post('/api/v1/todos/save', (request, response, next) => {
         .catch(next);
 });
 
-//Calling for camp data from api
-// app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
-//     const parkCode = request.params.parkCode;
-//     sa.get(NPSCG_API_URL)
-//         .query({
-//             parkCode: parkCode,
-//             api_key: NPS_API_KEY
-//         })
-//         .then(res => {
-//             const body = res.body;
-//             const formatted = {
-//                 campgrounds: body.data.map(camp => {
-//                     return {
-//                         name: camp.name,
-//                         parkCode: parkCode,
-//                         id: camp.id
-//                     };
-//                 })
-//             };
-//             response.send(formatted);
-//         })
-//         .catch(next);
-// });
-
 app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
     const parkCode = request.params.parkCode;
     sa.get(NPSCG_API_URL)
@@ -199,7 +175,38 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
         .catch(next);
 });
 
-app.use((err, request, response, next) => {
+app.get('/api/v1/trip/load', (request, response, next) => {
+    const query = request.query;
+    return client.query(`
+        SELECT id FROM trips
+        WHERE user_id = $1
+        ;`,
+    [query.id]
+    )
+        .then(result => {
+            response.send(result.rows);
+        })
+        .catch(next);
+});
+
+// Post Trip info to local database
+app.post('/api/v1/trip/save', (request, response, next) => {
+    const body = request.body;
+    return client.query(`
+        INSERT INTO trips (park_code, campground_id, user_id)
+        VALUES ($1, $2, $3)
+        RETURNING id, park_code, campground_id;
+        `,
+    [
+        body.park_code,
+        body.campground_id,
+        body.user_id
+    ])
+        .then(result => response.send(result.rows[0]))
+        .catch(next);
+});
+
+app.use((err, request, response, next) => { //eslint-disable-line
     console.log(err);
     if(err.status) {
         response.status(err.status).send({ error: err.message });
@@ -212,5 +219,3 @@ app.use((err, request, response, next) => {
 app.listen(PORT, () => {
     console.log('Server listening for PORT ', PORT);
 });
-
-

@@ -10,6 +10,8 @@ client.query(`
     );
     CREATE TABLE IF NOT EXISTS trips (
         id SERIAL PRIMARY KEY,
+        park_code VARCHAR(255) NOT NULL,
+        campground_id VARCHAR(255) NOT NULL,
         user_id int,
         FOREIGN KEY (user_id) REFERENCES users (id)                
     );
