@@ -159,7 +159,7 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
 app.get('/api/v1/trip/load', (request, response, next) => {
     const query = request.query;
     return client.query(`
-        SELECT id FROM trips
+        SELECT id, park_code, campground_id, user_id  FROM trips
         WHERE user_id = $1
         ;`,
     [query.id]
