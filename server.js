@@ -156,10 +156,23 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
         .catch(next);
 });
 
+app.get('/api/v1/trip/load', (request, response, next) => {
+    const query = request.query;
+    return client.query(`
+        SELECT id FROM trips
+        WHERE user_id = $1
+        ;`,
+    [query.id]
+    )
+        .then(result => {
+            response.send(result.rows);
+        })
+        .catch(next);
+});
+
 // Post Trip info to local database
 app.post('/api/v1/trip/save', (request, response, next) => {
     const body = request.body;
-    console.log(body);
     return client.query(`
         INSERT INTO trips (park_code, campground_id, user_id)
         VALUES ($1, $2, $3)
@@ -173,6 +186,7 @@ app.post('/api/v1/trip/save', (request, response, next) => {
         .then(result => response.send(result.rows[0]))
         .catch(next);
 });
+
 
 
                                     
