@@ -110,6 +110,25 @@ app.get('/api/v1/parks', (request, response, next) => {
         .catch(next);
 });
 
+app.post('/api/v1/todos/save', (request, response, next) => {
+    const body = request.body;
+    console.log('body.checklistHtml: ', body.checklistHtml);
+    console.log('body.todoHtml: ', body.todoHtml);
+    console.log('body.campground: ', body.campground);
+    return client.query(`
+        INSERT INTO todos (checklist, todos, campground)
+        VALUES ($1, $2, $3)
+        RETURNING checklist, todos, campground;
+        `,
+    [
+        body.checklistHtml,
+        body.todoHtml,
+        body.campground
+    ])
+        .then(result => response.send(result.rows[0]))
+        .catch(next);
+});
+
 //Calling for camp data from api
 // app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
 //     const parkCode = request.params.parkCode;
@@ -179,7 +198,7 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
         })
         .catch(next);
 });
-                                    
+
 app.use((err, request, response, next) => {
     console.log(err);
     if(err.status) {
