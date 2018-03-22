@@ -216,6 +216,19 @@ app.use((err, request, response, next) => { //eslint-disable-line
     }
 });
 
+app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
+    const id = request.params.id;
+
+    client.query(`
+        DELETE FROM trips
+        WHERE id=$1;
+    `,
+    [id]
+    )
+        .then(result => response.send({ removed: result.rowCount !== 0 }))
+        .catch(next);
+});
+
 app.listen(PORT, () => {
     console.log('Server listening for PORT ', PORT);
 });
