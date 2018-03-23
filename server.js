@@ -71,7 +71,6 @@ app.post('/api/v1/auth/login', (request, response, next) => {
                 return next({ status: 400, message: 'invalid email or password' });
             }
             userID[0] = result.rows[0].id;
-            console.log('GOT HERE', userID[0]);
             response.send(userID);
         })
         .catch(next);
@@ -84,7 +83,6 @@ app.get('api/v1/users', (request, response, next) => {
         .catch(next);
 });
 
-// Calling for park data from API
 app.get('/api/v1/parks', (request, response, next) => {
 
     sa.get(NPS_API_URL)
@@ -187,7 +185,6 @@ app.get('/api/v1/trip/load', (request, response, next) => {
         .catch(next);
 });
 
-// Post Trip info to local database
 app.post('/api/v1/trip/save', (request, response, next) => {
     const body = request.body;
     return client.query(`
@@ -202,16 +199,6 @@ app.post('/api/v1/trip/save', (request, response, next) => {
     ])
         .then(result => response.send(result.rows[0]))
         .catch(next);
-});
-
-app.use((err, request, response, next) => { //eslint-disable-line
-    console.log(err);
-    if(err.status) {
-        response.status(err.status).send({ error: err.message });
-    }
-    else {
-        response.sendStatus(500);
-    }
 });
 
 app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
@@ -237,19 +224,26 @@ app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
 
 app.get('/api/v1/profile/loadplan/:id', (request, response, next) => {
     const id = request.params.id;
-
     client.query(`
             SELECT * FROM todos
             WHERE trip_id=$1;    
     `,
     [id]
     )
-
         .then(
             result => response.send(result.rows)
         )
-
         .catch(next);
+});
+
+app.use((err, request, response, next) => { //eslint-disable-line
+    console.log(err);
+    if(err.status) {
+        response.status(err.status).send({ error: err.message });
+    }
+    else {
+        response.sendStatus(500);
+    }
 });
 
 app.listen(PORT, () => {
