@@ -77,6 +77,8 @@ app.post('/api/v1/auth/login', (request, response, next) => {
 });
 
 app.get('api/v1/users', (request, response, next) => {
+    // D'oh! You just exposed everyone's password!
+    // Be careful returning data from tables with sensitive information.
     client.query(`SELECT * FROM users;`
     )
         .then((results) => response.send(results.rows))
@@ -92,23 +94,25 @@ app.get('/api/v1/parks', (request, response, next) => {
             api_key: NPS_API_KEY
         })
         .then(res => {
-            const body = res.body;
-            const formatted = {
-                parks: body.data.map(park => {
-                    return {
-                        name: park.fullName,
-                        description: park.description,
-                        image_url: park.images[0].url,
-                        park_code: park.parkCode
-                    };
-                })
-            };
-            response.send(formatted);
+            const data = res.body.data;
+            // I don't know that you need to put array under "parks"
+            // property, just return array...
+            const parks = data.map(park => {
+                return {
+                    name: park.fullName,
+                    description: park.description,
+                    image_url: park.images[0].url,
+                    park_code: park.parkCode
+                };
+            });
+
+            response.send(parks);
         })
         .catch(next);
 });
 
-app.post('/api/v1/todos/save', (request, response, next) => {
+// NO VERBS in route paths! POST means save/add
+app.post('/api/v1/todos', (request, response, next) => {
     const body = request.body;
     return client.query(`
         INSERT INTO todos (checklist, todos, campground, trip_id)
@@ -134,6 +138,7 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
         })
         .then(res => {
             const body = res.body;
+            // again, just return the array
             const formatted = {
                 campgrounds: body.data.map(camp => {
                     return {
@@ -146,6 +151,7 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
                         regulations: camp.regulationsUrl,
                         
                         campsites: {
+                            // snake_case is not as idiomatic JavaScript as camelCase
                             total_sites: camp.campsites.totalSites,
                             other_sites: camp.campsites.other,
                             groups_sites: camp.campsites.group,
@@ -171,7 +177,8 @@ app.get('/api/v1/campgrounds/:parkCode', (request, response, next) => {
         .catch(next);
 });
 
-app.get('/api/v1/trip/load', (request, response, next) => {
+// GET means get.
+app.get('/api/v1/trips', (request, response, next) => {
     const query = request.query;
     return client.query(`
         SELECT id, park_code, campground_id, user_id  FROM trips
@@ -185,7 +192,8 @@ app.get('/api/v1/trip/load', (request, response, next) => {
         .catch(next);
 });
 
-app.post('/api/v1/trip/save', (request, response, next) => {
+// POST means save (add)
+app.post('/api/v1/trips', (request, response, next) => {
     const body = request.body;
     return client.query(`
         INSERT INTO trips (park_code, campground_id, user_id)
@@ -201,9 +209,11 @@ app.post('/api/v1/trip/save', (request, response, next) => {
         .catch(next);
 });
 
-app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
+// DELETE the trip with this id
+app.delete('/api/v1/trips/:id', (request, response, next) => {
     const id = request.params.id;
 
+    // remove the children first...
     client.query(`
             DELETE FROM todos
             WHERE trip_id=$1;
@@ -211,6 +221,7 @@ app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
     [id]
     )
         .then(
+            // then delete primary resource (trip)
             client.query(`
             DELETE FROM trips
             WHERE id=$1;
@@ -222,7 +233,7 @@ app.delete('/api/v1/profile/deletetrip/:id', (request, response, next) => {
         );
 });
 
-app.get('/api/v1/profile/loadplan/:id', (request, response, next) => {
+app.get('/api/v1/trips/:id', (request, response, next) => {
     const id = request.params.id;
     client.query(`
             SELECT * FROM todos

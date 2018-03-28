@@ -2,6 +2,10 @@
 
 const client = require('../db-client');
 
+// oh dear, what happened here...
+// Needs to be "structured data".
+// I don't think your app is a content management system.
+
 client.query(`
     INSERT INTO todos (checklist, todos, campground)
     VALUES (
